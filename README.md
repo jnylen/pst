@@ -14,6 +14,18 @@ A Rust command-line application for uploading files and pastes to multiple shari
 
 ## Installation
 
+### Install prebuilt binaries via Homebrew
+
+```bash
+brew install jnylen/tap/pst
+```
+
+### Install prebuilt binaries via shell script
+
+Grab the latest url from [this page](https://github.com/jnylen/pst/releases/latest).
+
+### Source
+
 ```bash
 # Build from source
 cd pst
