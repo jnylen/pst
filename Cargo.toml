@@ -1,0 +1,48 @@
+[package]
+name = "pst"
+version = "0.1.0"
+edition = "2021"
+description = "Upload files and pastes to multiple sharing services with automatic fallback"
+authors = ["User"]
+repository = "https://github.com/jnylen/pst"
+homepage = "https://github.com/jnylen/pst"
+
+[dependencies]
+clap = { version = "4.0", features = ["derive"] }
+tokio = { version = "1.0", features = ["full"] }
+async-trait = "0.1"
+futures-util = "0.3"
+reqwest = { version = "0.11", default-features = false, features = ["json", "multipart", "rustls-tls"] }
+ftp = "3.0"
+async-ssh2-lite = { version = "0.5", features = ["tokio"] }
+directories = "5"
+toml = "0.5"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+mime = "0.3"
+thiserror = "1.0"
+anyhow = "1.0"
+log = "0.4"
+env_logger = "0.9"
+atty = "0.2"
+shellexpand = "3"
+rand = "0.8"
+indicatif = { version = "0.17", optional = true }
+console = { version = "0.15", optional = true }
+arboard = "3.3"
+image = "0.24"
+mime_guess = "2.0"
+
+[features]
+default = []
+progress = ["indicatif", "console"]
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+
+# The profile that 'dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"

@@ -1,0 +1,60 @@
+name: Rust Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: dtolnay/rust-toolchain@stable
+      
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: native/exditorjs_native
+      
+      - name: Run tests
+        run: cargo test --manifest-path Cargo.toml --tests --verbose
+      
+      - name: Run tests (release)
+        run: cargo test --manifest-path Cargo.toml --tests --release --verbose
+
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: native/exditorjs_native
+      
+      - name: Run clippy
+        run: cargo clippy --manifest-path Cargo.toml --tests -- -D warnings
+
+  fmt:
+    name: Rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      
+      - name: Check formatting
+        run: cargo fmt --manifest-path Cargo.toml -- --check
