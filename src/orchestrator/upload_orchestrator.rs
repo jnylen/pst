@@ -3,8 +3,8 @@ use crate::models::{
     ProgressTracker, UploadRequest, UploadResponse, UploadType, VerboseProgressCallback,
 };
 use crate::providers::{
-    BunnyProvider, DirectoryMode, FTPProvider, FtpProviderConfig, PasteRsProvider, TransferProtocol,
-    UguuProvider, UploadError, UploadService, ZeroX0STProvider,
+    BunnyProvider, DirectoryMode, FTPProvider, FtpProviderConfig, PasteRsProvider,
+    TransferProtocol, UguuProvider, UploadError, UploadService, ZeroX0STProvider,
 };
 use std::collections::HashMap;
 use std::sync::Arc;

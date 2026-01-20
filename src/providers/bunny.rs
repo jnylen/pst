@@ -169,7 +169,10 @@ mod tests {
         );
 
         let url = provider.build_upload_url("test.png");
-        assert_eq!(url, "https://ny.storage.bunnycdn.com/my-storage-zone/test.png");
+        assert_eq!(
+            url,
+            "https://ny.storage.bunnycdn.com/my-storage-zone/test.png"
+        );
     }
 
     #[test]
@@ -258,12 +261,7 @@ mod tests {
             30,
         );
 
-        let request = UploadRequest::new(
-            b"test content".to_vec(),
-            None,
-            UploadType::Paste,
-            None,
-        );
+        let request = UploadRequest::new(b"test content".to_vec(), None, UploadType::Paste, None);
 
         let filename = provider.get_filename(&request);
         assert!(filename.ends_with(".txt"));
@@ -281,12 +279,7 @@ mod tests {
             30,
         );
 
-        let request = UploadRequest::new(
-            b"test content".to_vec(),
-            None,
-            UploadType::File,
-            None,
-        );
+        let request = UploadRequest::new(b"test content".to_vec(), None, UploadType::File, None);
 
         let filename = provider.get_filename(&request);
         assert!(filename.ends_with(".bin"));
