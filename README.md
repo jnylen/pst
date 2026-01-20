@@ -4,7 +4,7 @@ A Rust command-line application for uploading files and pastes to multiple shari
 
 ## Features
 
-- **Multi-provider support**: Upload to 0x0.st, paste.rs, uguu.se, and FTP/SFTP
+- **Multi-provider support**: Upload to 0x0.st, paste.rs, uguu.se, Bunny, and FTP/SFTP
 - **Automatic fallback**: If one provider fails, automatically tries the next one
 - **Smart content detection**: Automatically detects text pastes vs binary files
 - **Priority system**: Configure which providers to try first
@@ -82,7 +82,7 @@ pst image.png -p uguu
 echo "text" | pst --provider paste_rs
 
 # Available providers:
-# 0x0st, paste_rs, uguu, ftp_sftp
+# 0x0st, paste_rs, uguu, bunny, ftp_sftp
 ```
 
 ### Custom Filename
@@ -111,7 +111,7 @@ pst image.png --provider uguu
 echo "text" | pst --provider paste_rs
 
 # Available providers:
-# 0x0st, paste_rs, uguu, ftp_sftp
+# 0x0st, paste_rs, uguu, bunny, ftp_sftp
 ```
 
 ## Configuration
@@ -157,15 +157,25 @@ enabled = true
 type = "http"
 enabled = true
 
+# Bunny Storage Provider - requires explicit configuration
+[providers.bunny]
+type = "bunny"
+enabled = false  # Must be explicitly enabled
+storage_zone = "your-storage-zone"
+access_key = "your-bunny-access-key"
+region = "ny"  # Optional: la, ny, sg, etc. (empty = Frankfurt)
+public_url = "https://cdn.example.com/files"
+max_file_size_mb = 500
+
 # Provider groups - providers are tried in the order listed below
 [provider_groups.files]
-providers = ["ftp_sftp", "0x0st", "uguu"]
+providers = ["ftp_sftp", "bunny", "0x0st", "uguu"]
 
 [provider_groups.pastes]
-providers = ["ftp_sftp", "paste_rs"]
+providers = ["ftp_sftp", "bunny", "paste_rs"]
 
 [provider_groups.images]
-providers = ["ftp_sftp", "0x0st", "uguu"]
+providers = ["ftp_sftp", "bunny", "0x0st", "uguu"]
 ```
 
 ## Available Providers
@@ -175,7 +185,8 @@ providers = ["ftp_sftp", "0x0st", "uguu"]
 | `0x0st` | Files | 512 MiB | Secret URLs, expiration |
 | `paste_rs` | Pastes | ~10 MiB | Syntax highlighting |
 | `uguu` | Files | 128 MiB | 3-hour retention |
-| `ftp_sftp` | Files | Configurable | Custom public URL |
+| `bunny` | Files, Pastes | 500 MiB | Regional CDN, custom public URL |
+| `ftp_sftp` | Files, Pastes | Configurable | Custom public URL |
 
 ## Force Specific Provider
 
