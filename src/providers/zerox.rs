@@ -90,7 +90,7 @@ impl UploadService for ZeroX0STProvider {
 
         let response = client
             .post(&self.endpoint)
-            .header("User-Agent", "pst/0.1.0")
+            .header("User-Agent", format!("pst/{}", env!("CARGO_PKG_VERSION")))
             .multipart(form)
             .send()
             .await

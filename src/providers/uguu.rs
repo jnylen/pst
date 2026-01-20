@@ -63,7 +63,7 @@ impl UploadService for UguuProvider {
 
         let client = reqwest::Client::builder()
             .timeout(std::time::Duration::from_secs(self.timeout_seconds))
-            .user_agent("pst/0.1.0")
+            .user_agent(format!("pst/{}", env!("CARGO_PKG_VERSION")))
             .build()
             .map_err(|e| UploadError::ConnectionFailed(e.to_string()))?;
 

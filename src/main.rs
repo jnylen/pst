@@ -20,10 +20,10 @@ fn copy_to_clipboard(text: &str) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[derive(Parser, Debug)]
-#[clap(name = "pst")]
-#[clap(author = "User")]
-#[clap(version = "0.1.0")]
-#[clap(about = "Upload files, pastes, and clipboard content to multiple sharing services", long_about = None)]
+#[clap(name = env!("CARGO_PKG_NAME"))]
+#[clap(author = env!("CARGO_PKG_AUTHORS"))]
+#[clap(version = env!("CARGO_PKG_VERSION"))]
+#[clap(about = env!("CARGO_PKG_DESCRIPTION"))]
 struct Args {
     /// File to upload
     #[clap(
