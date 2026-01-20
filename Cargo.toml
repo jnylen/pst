@@ -1,9 +1,9 @@
 [package]
 name = "pst"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "Upload files and pastes to multiple sharing services with automatic fallback"
-authors = ["User"]
+authors = ["jnylen"]
 repository = "https://github.com/jnylen/pst"
 homepage = "https://github.com/jnylen/pst"
 
