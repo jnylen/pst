@@ -54,6 +54,8 @@ pub enum ProviderConfig {
     Http(HttpProviderConfig),
     #[serde(rename = "ftp_sftp")]
     FtpSftp(FTPSFTPProviderConfig),
+    #[serde(rename = "bunny")]
+    Bunny(BunnyProviderConfig),
 }
 
 impl ProviderConfig {
@@ -61,6 +63,7 @@ impl ProviderConfig {
         match self {
             ProviderConfig::Http(config) => config.enabled,
             ProviderConfig::FtpSftp(config) => config.enabled,
+            ProviderConfig::Bunny(config) => config.enabled,
         }
     }
 
@@ -69,6 +72,7 @@ impl ProviderConfig {
         match self {
             ProviderConfig::Http(config) => config.max_file_size_mb,
             ProviderConfig::FtpSftp(config) => config.max_file_size_mb,
+            ProviderConfig::Bunny(config) => config.max_file_size_mb,
         }
     }
 }
@@ -114,6 +118,19 @@ pub struct FTPSFTPProviderConfig {
     pub enable_sftp: bool,
     #[serde(default = "default_expiration")]
     pub default_expiration: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+pub struct BunnyProviderConfig {
+    #[serde(default = "default_enabled")]
+    pub enabled: bool,
+    pub storage_zone: String,
+    pub access_key: String,
+    #[serde(default)]
+    pub region: Option<String>,
+    pub public_url: String,
+    #[serde(default = "default_max_file_size")]
+    pub max_file_size_mb: u64,
 }
 
 fn default_enabled() -> bool {
@@ -248,6 +265,19 @@ impl Config {
                     }),
                 );
 
+                // Bunny CDN - requires explicit configuration
+                map.insert(
+                    "bunny".to_string(),
+                    ProviderConfig::Bunny(BunnyProviderConfig {
+                        enabled: false,
+                        storage_zone: "your-storage-zone".to_string(),
+                        access_key: "your-access-key".to_string(),
+                        region: None,
+                        public_url: "https://cdn.example.com/files".to_string(),
+                        max_file_size_mb: 500,
+                    }),
+                );
+
                 map
             },
             provider_groups: {
@@ -258,6 +288,7 @@ impl Config {
                     ProviderGroupConfig {
                         providers: vec![
                             "ftp_sftp".to_string(),
+                            "bunny".to_string(),
                             "0x0st".to_string(),
                             "uguu".to_string(),
                         ],
@@ -266,7 +297,11 @@ impl Config {
                 map.insert(
                     "pastes".to_string(),
                     ProviderGroupConfig {
-                        providers: vec!["ftp_sftp".to_string(), "paste_rs".to_string()],
+                        providers: vec![
+                            "ftp_sftp".to_string(),
+                            "bunny".to_string(),
+                            "paste_rs".to_string(),
+                        ],
                     },
                 );
                 map.insert(
@@ -274,6 +309,7 @@ impl Config {
                     ProviderGroupConfig {
                         providers: vec![
                             "ftp_sftp".to_string(),
+                            "bunny".to_string(),
                             "0x0st".to_string(),
                             "uguu".to_string(),
                         ],

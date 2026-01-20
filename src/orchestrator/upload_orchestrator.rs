@@ -3,8 +3,8 @@ use crate::models::{
     ProgressTracker, UploadRequest, UploadResponse, UploadType, VerboseProgressCallback,
 };
 use crate::providers::{
-    DirectoryMode, FTPProvider, FtpProviderConfig, PasteRsProvider, TransferProtocol, UguuProvider,
-    UploadError, UploadService, ZeroX0STProvider,
+    BunnyProvider, DirectoryMode, FTPProvider, FtpProviderConfig, PasteRsProvider, TransferProtocol,
+    UguuProvider, UploadError, UploadService, ZeroX0STProvider,
 };
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -154,7 +154,7 @@ impl UploadOrchestrator {
             UploadResponse::failed(
                 provider_name.to_string(),
                 format!(
-                    "Unknown provider: {}. Available providers: 0x0st, paste_rs, uguu, ftp_sftp",
+                    "Unknown provider: {}. Available providers: 0x0st, paste_rs, uguu, ftp_sftp, bunny",
                     provider_name
                 ),
             )
@@ -259,6 +259,20 @@ fn create_provider(
                     max_file_size_mb: ftp_config.max_file_size_mb,
                     ascii_mode_for_pastes: ftp_config.ascii_mode_for_pastes,
                 })))
+            } else {
+                None
+            }
+        }
+        "bunny" | "bunnycdn" => {
+            if let ProviderConfig::Bunny(bunny_config) = config {
+                Some(Box::new(BunnyProvider::new(
+                    bunny_config.storage_zone.clone(),
+                    bunny_config.access_key.clone(),
+                    bunny_config.region.clone(),
+                    bunny_config.public_url.clone(),
+                    bunny_config.max_file_size_mb,
+                    timeout_seconds,
+                )))
             } else {
                 None
             }
