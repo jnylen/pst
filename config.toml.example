@@ -4,6 +4,7 @@ timeout_seconds = 30
 max_retries = 3
 retry_delay_ms = 1000
 copy_to_clipboard = false  # Copy URLs to clipboard automatically
+strip_exif = true  # Remove EXIF metadata from images before upload
 
 # FTP/SFTP Provider - at the top of each group, disabled by default
 [providers.ftp_sftp]

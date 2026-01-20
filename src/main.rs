@@ -7,6 +7,7 @@ use tokio::io::{stdin, AsyncReadExt};
 
 mod clipboard;
 mod config;
+mod exif;
 mod models;
 mod orchestrator;
 mod providers;
@@ -69,6 +70,10 @@ struct Args {
     /// Copy URL to clipboard after upload
     #[clap(long)]
     copy_to_clipboard: bool,
+
+    /// Keep EXIF metadata when uploading images (disabled by default)
+    #[clap(long)]
+    no_exif: bool,
 }
 
 fn get_file_path(args: &Args) -> Result<Option<&String>> {
@@ -310,8 +315,26 @@ async fn main() -> Result<()> {
             .with_context(|| "Failed to load config from ~/.config/pst/config.toml")?,
     );
 
+    let should_strip_exif = config.general.strip_exif && !args.no_exif;
+
+    let processed_content = if upload_type == crate::models::UploadType::Image && should_strip_exif {
+        match exif::strip_exif(&content) {
+            Ok(stripped) => {
+                eprintln!("Stripped EXIF metadata from image (original: {} bytes, stripped: {} bytes)",
+                         content.len(), stripped.len());
+                stripped
+            }
+            Err(e) => {
+                eprintln!("Warning: Failed to strip EXIF ({}), using original image", e);
+                content
+            }
+        }
+    } else {
+        content
+    };
+
     let request = crate::models::UploadRequest::new(
-        content,
+        processed_content,
         final_filename,
         upload_type,
         Some(crate::models::UploadOptions {

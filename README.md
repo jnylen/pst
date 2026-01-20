@@ -11,6 +11,7 @@ A Rust command-line application for uploading files and pastes to multiple shari
 - **Progress tracking**: Optional progress bar for large uploads
 - **Multiple output formats**: URL, JSON, or verbose output
 - **Configuration file**: All settings in `~/.config/pst/config.toml`
+- **EXIF metadata removal**: Automatically strips EXIF from images before upload (configurable). Note: Original file is not modified, only the uploaded version.
 
 ## Installation
 
@@ -68,6 +69,7 @@ cat archive.zip | pst
 -p, --provider <PROVIDER>  Force specific provider
 -e, --expires <EXPIRES>    Set expiration time
     --progress             Show progress bar
+    --no-exif              Keep EXIF metadata when uploading images (disabled by default)
 -h, --help                 Print help
 -V, --version              Print version
 ```
@@ -121,34 +123,49 @@ Create `~/.config/pst/config.toml`:
 timeout_seconds = 30
 max_retries = 3
 retry_delay_ms = 1000
+copy_to_clipboard = false  # Copy URLs to clipboard automatically
+strip_exif = true  # Remove EXIF metadata from images (default: true)
 
-[providers.0x0st]
-enabled = true
-priority = 1
-
-[providers.paste_rs]
-enabled = true
-priority = 2
-
-[providers.uguu]
-enabled = true
-priority = 3
-
+# FTP/SFTP Provider - at the top of each group, disabled by default
 [providers.ftp_sftp]
-enabled = true
-priority = 5
+type = "ftp_sftp"
+enabled = false
 host = "ftp.example.com"
-port = 22
-username = "user"
-password = "pass"
+port = 22  # 21 for FTP/FTPS, 22 for SFTP
+username = "your_username"
+password = "your_password"  # Optional if using ssh_private_key
+# ssh_private_key = "~/.ssh/id_rsa"  # Use key auth instead of password
+# ssh_key_passphrase = ""
 directory = "/public_html/uploads"
-public_url = "https://cdn.example.com/uploads"
+public_url = "https://cdn.example.com/uploads"  # Required for public access
+directory_mode = "create_if_missing"
+max_file_size_mb = 1000
+enable_ftp = false
+enable_ftps = false
 enable_sftp = true
 
-[provider_groups]
-files = ["0x0st", "uguu", "ftp_sftp"]
-pastes = ["paste_rs", "ftp_sftp"]
-images = ["0x0st", "uguu", "ftp_sftp"]
+# HTTP Providers
+[providers.0x0st]
+type = "http"
+enabled = true
+
+[providers.paste_rs]
+type = "http"
+enabled = true
+
+[providers.uguu]
+type = "http"
+enabled = true
+
+# Provider groups - providers are tried in the order listed below
+[provider_groups.files]
+providers = ["ftp_sftp", "0x0st", "uguu"]
+
+[provider_groups.pastes]
+providers = ["ftp_sftp", "paste_rs"]
+
+[provider_groups.images]
+providers = ["ftp_sftp", "0x0st", "uguu"]
 ```
 
 ## Available Providers
@@ -200,6 +217,13 @@ pst document.pdf --provider 0x0st
 # JSON output for scripting
 pst data.json --output json
 # Output: {"success":true,"url":"https://0x0.st/..."}
+
+# Upload image with EXIF removed (default behavior)
+pst photo.jpg
+# Strips EXIF metadata automatically
+
+# Upload image and keep EXIF metadata
+pst photo.jpg --no-exif
 ```
 
 ## Requirements

@@ -43,6 +43,8 @@ pub struct GeneralConfig {
     pub retry_delay_ms: u64,
     #[serde(default = "default_copy_to_clipboard")]
     pub copy_to_clipboard: bool,
+    #[serde(default = "default_strip_exif")]
+    pub strip_exif: bool,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -142,6 +144,10 @@ fn default_copy_to_clipboard() -> bool {
     false
 }
 
+fn default_strip_exif() -> bool {
+    true
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct ProviderGroupConfig {
     pub providers: Vec<String>,
@@ -180,6 +186,7 @@ impl Config {
                 max_retries: 3,
                 retry_delay_ms: 1000,
                 copy_to_clipboard: false,
+                strip_exif: true,
             },
             providers: {
                 let mut map = HashMap::new();
