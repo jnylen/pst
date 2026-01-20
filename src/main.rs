@@ -317,15 +317,22 @@ async fn main() -> Result<()> {
 
     let should_strip_exif = config.general.strip_exif && !args.no_exif;
 
-    let processed_content = if upload_type == crate::models::UploadType::Image && should_strip_exif {
+    let processed_content = if upload_type == crate::models::UploadType::Image && should_strip_exif
+    {
         match exif::strip_exif(&content) {
             Ok(stripped) => {
-                eprintln!("Stripped EXIF metadata from image (original: {} bytes, stripped: {} bytes)",
-                         content.len(), stripped.len());
+                eprintln!(
+                    "Stripped EXIF metadata from image (original: {} bytes, stripped: {} bytes)",
+                    content.len(),
+                    stripped.len()
+                );
                 stripped
             }
             Err(e) => {
-                eprintln!("Warning: Failed to strip EXIF ({}), using original image", e);
+                eprintln!(
+                    "Warning: Failed to strip EXIF ({}), using original image",
+                    e
+                );
                 content
             }
         }
