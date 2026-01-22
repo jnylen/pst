@@ -265,6 +265,17 @@ impl Config {
                     }),
                 );
 
+                map.insert(
+                    "x0at".to_string(),
+                    ProviderConfig::Http(HttpProviderConfig {
+                        enabled: true,
+                        max_file_size_mb: 512,
+                        ascii_mode_for_pastes: true,
+                        userhash: None,
+                        default_expiration: "1h".to_string(),
+                    }),
+                );
+
                 // Bunny CDN - requires explicit configuration
                 map.insert(
                     "bunny".to_string(),
@@ -290,6 +301,7 @@ impl Config {
                             "ftp_sftp".to_string(),
                             "bunny".to_string(),
                             "0x0st".to_string(),
+                            "x0at".to_string(),
                             "uguu".to_string(),
                         ],
                     },
@@ -301,6 +313,7 @@ impl Config {
                             "ftp_sftp".to_string(),
                             "bunny".to_string(),
                             "paste_rs".to_string(),
+                            "x0at".to_string(),
                         ],
                     },
                 );
@@ -311,6 +324,7 @@ impl Config {
                             "ftp_sftp".to_string(),
                             "bunny".to_string(),
                             "0x0st".to_string(),
+                            "x0at".to_string(),
                             "uguu".to_string(),
                         ],
                     },

@@ -37,6 +37,10 @@ enabled = true
 type = "http"
 enabled = true
 
+[providers.x0at]
+type = "http"
+enabled = true
+
 # Bunny CDN Storage Provider - requires explicit configuration
 # Get your access key from: https://bunnycdn.com/dashboard/cdn
 [providers.bunny]
@@ -50,10 +54,10 @@ max_file_size_mb = 500
 
 # Provider groups - providers are tried in the order listed below
 [provider_groups.files]
-providers = ["ftp_sftp", "bunny", "0x0st", "uguu"]
+providers = ["ftp_sftp", "bunny", "0x0st", "x0at", "uguu"]
 
 [provider_groups.pastes]
-providers = ["ftp_sftp", "bunny", "paste_rs"]
+providers = ["ftp_sftp", "bunny", "paste_rs", "x0at"]
 
 [provider_groups.images]
-providers = ["ftp_sftp", "bunny", "0x0st", "uguu"]
+providers = ["ftp_sftp", "bunny", "0x0st", "x0at", "uguu"]

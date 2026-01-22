@@ -4,7 +4,7 @@ use crate::models::{
 };
 use crate::providers::{
     BunnyProvider, DirectoryMode, FTPProvider, FtpProviderConfig, PasteRsProvider,
-    TransferProtocol, UguuProvider, UploadError, UploadService, ZeroX0STProvider,
+    TransferProtocol, UguuProvider, UploadError, UploadService, X0AtProvider, ZeroX0STProvider,
 };
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -154,7 +154,7 @@ impl UploadOrchestrator {
             UploadResponse::failed(
                 provider_name.to_string(),
                 format!(
-                    "Unknown provider: {}. Available providers: 0x0st, paste_rs, uguu, ftp_sftp, bunny",
+                    "Unknown provider: {}. Available providers: 0x0st, paste_rs, uguu, x0at, ftp_sftp, bunny",
                     provider_name
                 ),
             )
@@ -226,6 +226,7 @@ fn create_provider(
         "0x0st" | "0x0.st" => Some(Box::new(ZeroX0STProvider::new(timeout_seconds))),
         "paste_rs" | "paste.rs" => Some(Box::new(PasteRsProvider::new(timeout_seconds))),
         "uguu" | "uguu.se" => Some(Box::new(UguuProvider::new(timeout_seconds))),
+        "x0at" | "x0.at" => Some(Box::new(X0AtProvider::new(timeout_seconds))),
         "ftp_sftp" | "ftp" | "sftp" => {
             if let ProviderConfig::FtpSftp(ftp_config) = config {
                 // Determine which protocol to use
