@@ -55,6 +55,17 @@ impl BunnyProvider {
                 return format!("{}{}", random, ext);
             }
             name.clone()
+        } else if request.is_redirect {
+            const CHARSET: &[u8] =
+                b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            let mut rng = rand::thread_rng();
+            let random: String = (0..8)
+                .map(|_| {
+                    let idx = rng.gen::<usize>() % CHARSET.len();
+                    CHARSET[idx] as char
+                })
+                .collect();
+            format!("{}.html", random)
         } else if matches!(request.upload_type, UploadType::Paste) {
             const CHARSET: &[u8] =
                 b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -221,6 +232,7 @@ mod tests {
             Some("*.csv".to_string()),
             UploadType::File,
             None,
+            false,
         );
 
         let filename = provider.get_filename(&request);
@@ -244,6 +256,7 @@ mod tests {
             Some("myfile.png".to_string()),
             UploadType::Image,
             None,
+            false,
         );
 
         let filename = provider.get_filename(&request);
@@ -261,11 +274,29 @@ mod tests {
             30,
         );
 
-        let request = UploadRequest::new(b"test content".to_vec(), None, UploadType::Paste, None);
+        let request = UploadRequest::new(b"test content".to_vec(), None, UploadType::Paste, None, false);
 
         let filename = provider.get_filename(&request);
         assert!(filename.ends_with(".txt"));
         assert_eq!(filename.len(), 12); // 8 random chars + .txt
+    }
+
+    #[test]
+    fn test_get_filename_redirect_generates_html() {
+        let provider = BunnyProvider::new(
+            "my-storage-zone".to_string(),
+            "test-key".to_string(),
+            None,
+            "https://cdn.example.com".to_string(),
+            500,
+            30,
+        );
+
+        let request = UploadRequest::new(b"html content".to_vec(), None, UploadType::Paste, None, true);
+
+        let filename = provider.get_filename(&request);
+        assert!(filename.ends_with(".html"));
+        assert_eq!(filename.len(), 13); // 8 random chars + .html
     }
 
     #[test]
@@ -279,7 +310,7 @@ mod tests {
             30,
         );
 
-        let request = UploadRequest::new(b"test content".to_vec(), None, UploadType::File, None);
+        let request = UploadRequest::new(b"test content".to_vec(), None, UploadType::File, None, false);
 
         let filename = provider.get_filename(&request);
         assert!(filename.ends_with(".bin"));

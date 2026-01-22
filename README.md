@@ -12,6 +12,7 @@ A Rust command-line application for uploading files and pastes to multiple shari
 - **Multiple output formats**: URL, JSON, or verbose output
 - **Configuration file**: All settings in `~/.config/pst/config.toml`
 - **EXIF metadata removal**: Automatically strips EXIF from images before upload (configurable). Note: Original file is not modified, only the uploaded version.
+- **Redirect creation**: Create HTML redirect pages that forward to any URL
 
 ## Installation
 
@@ -68,6 +69,7 @@ cat archive.zip | pst
 -g, --group <GROUP>        Provider group to use (files, pastes, images)
 -p, --provider <PROVIDER>  Force specific provider
 -e, --expires <EXPIRES>    Set expiration time
+-r, --redirect <URL>       Create an HTML redirect page to the specified URL
     --progress             Show progress bar
     --no-exif              Keep EXIF metadata when uploading images (disabled by default)
 -h, --help                 Print help
@@ -91,6 +93,33 @@ echo "text" | pst --provider paste_rs
 pst document.pdf -n myfile.pdf
 echo "content" | pst --filename custom.txt
 ```
+
+### Create Redirect Page
+
+Create an HTML redirect page that forwards to any URL:
+
+```bash
+# Create a redirect to a URL (uses pastes group by default)
+pst --redirect https://example.com
+# Output: https://x0.at/abc123.html
+
+# Force a specific provider
+pst --redirect https://example.com --provider bunny
+# Output: https://cdn.example.com/random.html
+
+# Use a custom filename
+pst --redirect https://example.com -n go.html
+# Output: https://x0.at/abc123.go.html
+
+# Combine with JSON output for scripting
+pst --redirect https://example.com --output json
+# Output: {"success":true,"url":"https://paste.rs/..."}
+```
+
+The generated redirect page includes:
+- JavaScript redirect (primary method)
+- Meta refresh fallback
+- Visible "Redirecting you to..." text with clickable link
 
 ### Provider Order
 
@@ -244,6 +273,18 @@ pst photo.jpg
 
 # Upload image and keep EXIF metadata
 pst photo.jpg --no-exif
+
+# Create a redirect page
+pst --redirect https://example.com
+# Output: https://x0.at/abc123.html
+
+# Create redirect with custom filename
+pst --redirect https://example.com -n go.html
+# Output: https://x0.at/abc123.go.html
+
+# Create redirect using specific provider
+pst --redirect https://example.com --provider bunny
+# Output: https://cdn.example.com/random.html
 ```
 
 ## Requirements

@@ -54,6 +54,7 @@ mod tests {
             Some("test.txt".to_string()),
             UploadType::Paste,
             None,
+            false,
         );
         
         assert_eq!(request.content, content);
@@ -274,6 +275,7 @@ mod tests {
             Some("test.txt".to_string()),
             UploadType::File,
             None,
+            false,
         );
         
         assert_eq!(request.file_size(), 12);
@@ -330,10 +332,16 @@ impl UploadService for X0AtProvider {
             .build()
             .map_err(|e| UploadError::ConnectionFailed(e.to_string()))?;
 
+        let default_filename = if request.is_redirect {
+            "redirect.html".to_string()
+        } else {
+            "file".to_string()
+        };
+
         let filename = request
             .filename
             .clone()
-            .unwrap_or_else(|| "file".to_string());
+            .unwrap_or_else(|| default_filename);
 
         let mime_type = request
             .filename

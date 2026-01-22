@@ -99,6 +99,17 @@ impl FTPProvider {
                 return format!("{}{}", random, ext);
             }
             name.clone()
+        } else if request.is_redirect {
+            const CHARSET: &[u8] =
+                b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            let mut rng = rand::thread_rng();
+            let random: String = (0..8)
+                .map(|_| {
+                    let idx = rng.gen::<usize>() % CHARSET.len();
+                    CHARSET[idx] as char
+                })
+                .collect();
+            format!("{}.html", random)
         } else if matches!(request.upload_type, UploadType::Paste) {
             const CHARSET: &[u8] =
                 b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";

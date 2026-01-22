@@ -11,6 +11,7 @@ mod exif;
 mod models;
 mod orchestrator;
 mod providers;
+mod redirect_generator;
 
 fn copy_to_clipboard(text: &str) -> Result<(), Box<dyn std::error::Error>> {
     use arboard::Clipboard;
@@ -74,6 +75,10 @@ struct Args {
     /// Keep EXIF metadata when uploading images (disabled by default)
     #[clap(long)]
     no_exif: bool,
+
+    /// Create a redirect HTML file that redirects to the provided URL
+    #[clap(short, long, value_name = "URL", conflicts_with = "file", conflicts_with = "input_file", conflicts_with = "clipboard")]
+    redirect: Option<String>,
 }
 
 fn get_file_path(args: &Args) -> Result<Option<&String>> {
@@ -211,7 +216,14 @@ async fn main() -> Result<()> {
 
     let args = Args::parse();
 
-    let (content, filename): (Vec<u8>, Option<String>) = if args.clipboard {
+    let (content, filename): (Vec<u8>, Option<String>) = if let Some(target_url) = &args.redirect {
+        if !target_url.starts_with("http://") && !target_url.starts_with("https://") {
+            anyhow::bail!("Redirect URL must start with http:// or https://");
+        }
+        let html_content = redirect_generator::generate_redirect_html(target_url);
+        let filename = args.filename.clone();
+        (html_content, filename)
+    } else if args.clipboard {
         // Handle clipboard upload
         let clipboard_content =
             ClipboardContent::from_clipboard().context("Failed to read clipboard content")?;
@@ -304,9 +316,24 @@ async fn main() -> Result<()> {
 
     let (detected_group, detected_filename, detected_upload_type) =
         determine_upload_type(&content, filename.as_deref(), args.clipboard);
-    let group = args.group.unwrap_or(detected_group);
-    let final_filename = args.filename.or(detected_filename);
-    let upload_type = detected_upload_type;
+
+    let is_redirect = args.redirect.is_some();
+    let has_custom_filename = args.filename.is_some();
+    let group = if is_redirect {
+        args.group.unwrap_or_else(|| "pastes".to_string())
+    } else {
+        args.group.unwrap_or(detected_group)
+    };
+    let final_filename = if is_redirect && !has_custom_filename {
+        None
+    } else {
+        args.filename.clone().or(detected_filename)
+    };
+    let upload_type = if is_redirect {
+        crate::models::UploadType::Paste
+    } else {
+        detected_upload_type
+    };
 
     let force_provider = args.provider.clone();
 
@@ -315,7 +342,7 @@ async fn main() -> Result<()> {
             .with_context(|| "Failed to load config from ~/.config/pst/config.toml")?,
     );
 
-    let should_strip_exif = config.general.strip_exif && !args.no_exif;
+    let should_strip_exif = !is_redirect && config.general.strip_exif && !args.no_exif;
 
     let processed_content = if upload_type == crate::models::UploadType::Image && should_strip_exif
     {
@@ -349,6 +376,7 @@ async fn main() -> Result<()> {
             secret_url: false,
             custom_name: None,
         }),
+        is_redirect,
     );
 
     let orchestrator = Arc::new(crate::orchestrator::UploadOrchestrator::new(config.clone()));

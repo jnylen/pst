@@ -5,6 +5,8 @@ pub struct UploadRequest {
     pub upload_type: UploadType,
     #[allow(dead_code)]
     pub options: UploadOptions,
+    #[allow(dead_code)]
+    pub is_redirect: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -30,12 +32,14 @@ impl UploadRequest {
         filename: Option<String>,
         upload_type: UploadType,
         options: Option<UploadOptions>,
+        is_redirect: bool,
     ) -> Self {
         Self {
             content,
             filename,
             upload_type,
             options: options.unwrap_or_default(),
+            is_redirect,
         }
     }
 
