@@ -56,6 +56,8 @@ pub enum ProviderConfig {
     FtpSftp(FTPSFTPProviderConfig),
     #[serde(rename = "bunny")]
     Bunny(BunnyProviderConfig),
+    #[serde(rename = "s3")]
+    S3(S3ProviderConfig),
 }
 
 impl ProviderConfig {
@@ -64,6 +66,7 @@ impl ProviderConfig {
             ProviderConfig::Http(config) => config.enabled,
             ProviderConfig::FtpSftp(config) => config.enabled,
             ProviderConfig::Bunny(config) => config.enabled,
+            ProviderConfig::S3(config) => config.enabled,
         }
     }
 
@@ -73,6 +76,7 @@ impl ProviderConfig {
             ProviderConfig::Http(config) => config.max_file_size_mb,
             ProviderConfig::FtpSftp(config) => config.max_file_size_mb,
             ProviderConfig::Bunny(config) => config.max_file_size_mb,
+            ProviderConfig::S3(config) => config.max_file_size_mb,
         }
     }
 }
@@ -131,6 +135,58 @@ pub struct BunnyProviderConfig {
     pub public_url: String,
     #[serde(default = "default_max_file_size")]
     pub max_file_size_mb: u64,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct S3ProviderConfig {
+    #[serde(default = "default_disabled")]
+    pub enabled: bool,
+    pub bucket: String,
+    pub region: String,
+    #[serde(default)]
+    pub endpoint: Option<String>,
+    pub access_key_id: String,
+    pub secret_access_key: String,
+    pub public_url: String,
+    #[serde(default = "default_s3_max_file_size")]
+    pub max_file_size_mb: u64,
+    #[serde(default = "default_multipart_threshold")]
+    pub multipart_threshold_mb: u64,
+    #[serde(default = "default_multipart_chunk_size")]
+    pub multipart_chunk_size_mb: u64,
+}
+
+impl Default for S3ProviderConfig {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            bucket: String::new(),
+            region: "us-east-1".to_string(),
+            endpoint: None,
+            access_key_id: String::new(),
+            secret_access_key: String::new(),
+            public_url: String::new(),
+            max_file_size_mb: 5000,
+            multipart_threshold_mb: 100,
+            multipart_chunk_size_mb: 10,
+        }
+    }
+}
+
+fn default_disabled() -> bool {
+    false
+}
+
+fn default_s3_max_file_size() -> u64 {
+    5000
+}
+
+fn default_multipart_threshold() -> u64 {
+    100
+}
+
+fn default_multipart_chunk_size() -> u64 {
+    10
 }
 
 fn default_enabled() -> bool {
@@ -289,16 +345,34 @@ impl Config {
                     }),
                 );
 
+                // S3 Provider - requires explicit configuration
+                map.insert(
+                    "s3".to_string(),
+                    ProviderConfig::S3(S3ProviderConfig {
+                        enabled: false,
+                        bucket: "my-bucket".to_string(),
+                        region: "us-east-1".to_string(),
+                        endpoint: None,
+                        access_key_id: "AKIA...".to_string(),
+                        secret_access_key: "...".to_string(),
+                        public_url: "https://my-bucket.s3.amazonaws.com".to_string(),
+                        max_file_size_mb: 5000,
+                        multipart_threshold_mb: 100,
+                        multipart_chunk_size_mb: 10,
+                    }),
+                );
+
                 map
             },
             provider_groups: {
                 let mut map = HashMap::new();
-                // FTP/SFTP at the top
+                // FTP/SFTP at the top, then S3, then others
                 map.insert(
                     "files".to_string(),
                     ProviderGroupConfig {
                         providers: vec![
                             "ftp_sftp".to_string(),
+                            "s3".to_string(),
                             "bunny".to_string(),
                             "0x0st".to_string(),
                             "x0at".to_string(),
@@ -311,6 +385,7 @@ impl Config {
                     ProviderGroupConfig {
                         providers: vec![
                             "ftp_sftp".to_string(),
+                            "s3".to_string(),
                             "bunny".to_string(),
                             "paste_rs".to_string(),
                             "x0at".to_string(),
@@ -322,6 +397,7 @@ impl Config {
                     ProviderGroupConfig {
                         providers: vec![
                             "ftp_sftp".to_string(),
+                            "s3".to_string(),
                             "bunny".to_string(),
                             "0x0st".to_string(),
                             "x0at".to_string(),

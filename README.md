@@ -4,7 +4,7 @@ A Rust command-line application for uploading files and pastes to multiple shari
 
 ## Features
 
-- **Multi-provider support**: Upload to 0x0.st, x0.at, paste.rs, uguu.se, Bunny, and FTP/SFTP
+- **Multi-provider support**: Upload to 0x0.st, x0.at, paste.rs, uguu.se, Bunny, S3/S3-compatible services, and FTP/SFTP
 - **Automatic fallback**: If one provider fails, automatically tries the next one
 - **Smart content detection**: Automatically detects text pastes vs binary files
 - **Priority system**: Configure which providers to try first
@@ -84,7 +84,7 @@ pst image.png -p uguu
 echo "text" | pst --provider paste_rs
 
 # Available providers:
-# 0x0st, x0at, paste_rs, uguu, bunny, ftp_sftp
+# 0x0st, x0at, paste_rs, uguu, bunny, s3, ftp_sftp
 ```
 
 ### Custom Filename
@@ -140,7 +140,7 @@ pst image.png --provider uguu
 echo "text" | pst --provider paste_rs
 
 # Available providers:
-# 0x0st, x0at, paste_rs, uguu, bunny, ftp_sftp
+# 0x0st, x0at, paste_rs, uguu, bunny, s3, ftp_sftp
 ```
 
 ## Configuration
@@ -200,15 +200,30 @@ region = "ny"  # Optional: la, ny, sg, etc. (empty = Frankfurt)
 public_url = "https://cdn.example.com/files"
 max_file_size_mb = 500
 
+# S3 Provider - works with AWS S3, MinIO, DigitalOcean Spaces, and other S3-compatible services
+[providers.s3]
+type = "s3"
+enabled = false  # Must be explicitly enabled
+bucket = "my-bucket"
+region = "us-east-1"
+# Optional: Custom endpoint for S3-compatible services (MinIO, DigitalOcean Spaces, etc.)
+# endpoint = "https://nyc3.digitaloceanspaces.com"
+access_key_id = "AKIA..."
+secret_access_key = "..."
+max_file_size_mb = 5000  # S3 supports up to 5TB
+multipart_threshold_mb = 100  # Files larger than this use multipart upload
+multipart_chunk_size_mb = 10  # Size of each part in multipart uploads
+public_url = "https://my-bucket.s3.amazonaws.com"  # URL prefix for accessing files
+
 # Provider groups - providers are tried in the order listed below
 [provider_groups.files]
-providers = ["ftp_sftp", "bunny", "0x0st", "x0at", "uguu"]
+providers = ["ftp_sftp", "s3", "bunny", "0x0st", "x0at", "uguu"]
 
 [provider_groups.pastes]
-providers = ["ftp_sftp", "bunny", "paste_rs", "x0at"]
+providers = ["ftp_sftp", "s3", "bunny", "paste_rs", "x0at"]
 
 [provider_groups.images]
-providers = ["ftp_sftp", "bunny", "0x0st", "x0at", "uguu"]
+providers = ["ftp_sftp", "s3", "bunny", "0x0st", "x0at", "uguu"]
 ```
 
 ## Available Providers
@@ -220,6 +235,7 @@ providers = ["ftp_sftp", "bunny", "0x0st", "x0at", "uguu"]
 | `paste_rs` | Pastes | ~10 MiB | Syntax highlighting |
 | `uguu` | Files | 128 MiB | 3-hour retention |
 | `bunny` | Files, Pastes | 500 MiB | Regional CDN, custom public URL |
+| `s3` | Files, Pastes | 5 TiB | AWS S3, MinIO, DigitalOcean Spaces, etc. |
 | `ftp_sftp` | Files, Pastes | Configurable | Custom public URL |
 
 ## Force Specific Provider

@@ -32,6 +32,9 @@ console = { version = "0.15", optional = true }
 arboard = "3.3"
 image = "0.24"
 mime_guess = "2.0"
+aws-config = { version = "1.0", features = ["behavior-version-latest"] }
+aws-sdk-s3 = { version = "1.0", features = ["behavior-version-latest"] }
+aws-credential-types = "1.0"
 
 [features]
 default = []

@@ -3,7 +3,7 @@ use crate::models::{
     ProgressTracker, UploadRequest, UploadResponse, UploadType, VerboseProgressCallback,
 };
 use crate::providers::{
-    BunnyProvider, DirectoryMode, FTPProvider, FtpProviderConfig, PasteRsProvider,
+    BunnyProvider, DirectoryMode, FTPProvider, FtpProviderConfig, PasteRsProvider, S3Provider,
     TransferProtocol, UguuProvider, UploadError, UploadService, X0AtProvider, ZeroX0STProvider,
 };
 use std::collections::HashMap;
@@ -154,7 +154,7 @@ impl UploadOrchestrator {
             UploadResponse::failed(
                 provider_name.to_string(),
                 format!(
-                    "Unknown provider: {}. Available providers: 0x0st, paste_rs, uguu, x0at, ftp_sftp, bunny",
+                    "Unknown provider: {}. Available providers: 0x0st, paste_rs, uguu, x0at, ftp_sftp, bunny, s3",
                     provider_name
                 ),
             )
@@ -272,6 +272,24 @@ fn create_provider(
                     bunny_config.region.clone(),
                     bunny_config.public_url.clone(),
                     bunny_config.max_file_size_mb,
+                    timeout_seconds,
+                )))
+            } else {
+                None
+            }
+        }
+        "s3" => {
+            if let ProviderConfig::S3(s3_config) = config {
+                Some(Box::new(S3Provider::new(
+                    s3_config.bucket.clone(),
+                    s3_config.region.clone(),
+                    s3_config.endpoint.clone(),
+                    s3_config.access_key_id.clone(),
+                    s3_config.secret_access_key.clone(),
+                    s3_config.public_url.clone(),
+                    s3_config.max_file_size_mb,
+                    s3_config.multipart_threshold_mb,
+                    s3_config.multipart_chunk_size_mb,
                     timeout_seconds,
                 )))
             } else {

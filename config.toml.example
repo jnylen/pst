@@ -52,12 +52,34 @@ region = "ny"  # Optional: la, ny, sg, etc. (empty = Frankfurt/global)
 public_url = "https://cdn.yourdomain.com/files"
 max_file_size_mb = 500
 
+# S3 Provider - works with AWS S3, MinIO, DigitalOcean Spaces, and other S3-compatible services
+[providers.s3]
+type = "s3"
+enabled = false  # Must be explicitly enabled
+bucket = "my-bucket"
+region = "us-east-1"
+# Optional: Custom endpoint for S3-compatible services (MinIO, DigitalOcean Spaces, etc.)
+# For AWS S3, leave endpoint empty or remove this line
+# endpoint = "https://nyc3.digitaloceanspaces.com"
+access_key_id = "AKIA..."
+secret_access_key = "..."
+max_file_size_mb = 5000  # S3 supports up to 5TB
+# Threshold for multipart uploads (default: 100MB)
+multipart_threshold_mb = 100
+# Part size for multipart uploads (default: 10MB)
+multipart_chunk_size_mb = 10
+# Public URL prefix for accessing uploaded files
+# For AWS S3: "https://my-bucket.s3.amazonaws.com"
+# For DigitalOcean: "https://my-bucket.nyc3.digitaloceanspaces.com"
+# For MinIO: "https://minio.example.com/my-bucket"
+public_url = "https://my-bucket.s3.amazonaws.com"
+
 # Provider groups - providers are tried in the order listed below
 [provider_groups.files]
-providers = ["ftp_sftp", "bunny", "0x0st", "x0at", "uguu"]
+providers = ["ftp_sftp", "s3", "bunny", "0x0st", "x0at", "uguu"]
 
 [provider_groups.pastes]
-providers = ["ftp_sftp", "bunny", "paste_rs", "x0at"]
+providers = ["ftp_sftp", "s3", "bunny", "paste_rs", "x0at"]
 
 [provider_groups.images]
-providers = ["ftp_sftp", "bunny", "0x0st", "x0at", "uguu"]
+providers = ["ftp_sftp", "s3", "bunny", "0x0st", "x0at", "uguu"]
