@@ -70,7 +70,14 @@ struct Args {
     no_exif: bool,
 
     /// Create a redirect HTML file that redirects to the provided URL
-    #[clap(short, long, value_name = "URL", conflicts_with = "file", conflicts_with = "input_file", conflicts_with = "clipboard")]
+    #[clap(
+        short,
+        long,
+        value_name = "URL",
+        conflicts_with = "file",
+        conflicts_with = "input_file",
+        conflicts_with = "clipboard"
+    )]
     redirect: Option<String>,
 }
 

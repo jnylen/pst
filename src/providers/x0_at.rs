@@ -3,6 +3,7 @@ use crate::providers::{ProviderCapabilities, UploadError, UploadService};
 use async_trait::async_trait;
 
 #[cfg(test)]
+#[allow(clippy::items_after_test_module)]
 mod tests {
     use super::*;
     use crate::models::UploadOptions;
@@ -23,7 +24,7 @@ mod tests {
     #[test]
     fn test_supports_upload_types() {
         let provider = X0AtProvider::new(30);
-        
+
         assert!(provider.supports_upload_type(UploadType::File));
         assert!(provider.supports_upload_type(UploadType::Image));
         assert!(provider.supports_upload_type(UploadType::Paste));
@@ -39,7 +40,7 @@ mod tests {
     fn test_capabilities() {
         let provider = X0AtProvider::new(30);
         let capabilities = provider.capabilities();
-        
+
         assert!(!capabilities.supports_expiration);
         assert!(!capabilities.supports_custom_names);
         assert!(!capabilities.requires_auth);
@@ -56,7 +57,7 @@ mod tests {
             None,
             false,
         );
-        
+
         assert_eq!(request.content, content);
         assert_eq!(request.filename, Some("test.txt".to_string()));
         assert_eq!(request.upload_type, UploadType::Paste);
@@ -85,7 +86,7 @@ mod tests {
             ("test.bin", "application/octet-stream"),
             ("test.unknown", "application/octet-stream"),
         ];
-        
+
         for (filename, expected_mime) in test_cases {
             let mime_type: &str = std::path::Path::new(filename)
                 .extension()
@@ -107,8 +108,12 @@ mod tests {
                     _ => "application/octet-stream",
                 })
                 .unwrap_or("application/octet-stream");
-                
-            assert_eq!(mime_type, expected_mime, "Failed for filename: {}", filename);
+
+            assert_eq!(
+                mime_type, expected_mime,
+                "Failed for filename: {}",
+                filename
+            );
         }
     }
 
@@ -119,7 +124,7 @@ mod tests {
             "x0at".to_string(),
             None,
         );
-        
+
         assert!(response.success);
         assert_eq!(response.url, Some("https://x0.at/test.txt".to_string()));
         assert_eq!(response.provider, "x0at");
@@ -128,11 +133,8 @@ mod tests {
 
     #[test]
     fn test_upload_response_failure() {
-        let response = UploadResponse::failed(
-            "x0at".to_string(),
-            "Connection failed".to_string(),
-        );
-        
+        let response = UploadResponse::failed("x0at".to_string(), "Connection failed".to_string());
+
         assert!(!response.success);
         assert_eq!(response.url, None);
         assert_eq!(response.provider, "x0at");
@@ -145,18 +147,34 @@ mod tests {
             max_size: 512 * 1024 * 1024,
             actual_size: 1024 * 1024 * 1024,
         };
-        
+
         let error_str = error.to_string();
-        assert!(error_str.contains("File too large"), "Error should mention 'File too large': {}", error_str);
-        assert!(error_str.contains("max"), "Error should mention 'max': {}", error_str);
-        assert!(error_str.contains("got"), "Error should mention 'got': {}", error_str);
-        assert!(error_str.contains("bytes"), "Error should mention 'bytes': {}", error_str);
+        assert!(
+            error_str.contains("File too large"),
+            "Error should mention 'File too large': {}",
+            error_str
+        );
+        assert!(
+            error_str.contains("max"),
+            "Error should mention 'max': {}",
+            error_str
+        );
+        assert!(
+            error_str.contains("got"),
+            "Error should mention 'got': {}",
+            error_str
+        );
+        assert!(
+            error_str.contains("bytes"),
+            "Error should mention 'bytes': {}",
+            error_str
+        );
     }
 
     #[test]
     fn test_upload_error_connection_failed() {
         let error = UploadError::ConnectionFailed("Network error".to_string());
-        
+
         assert!(error.to_string().contains("Connection failed"));
         assert!(error.to_string().contains("Network error"));
     }
@@ -164,7 +182,7 @@ mod tests {
     #[test]
     fn test_upload_error_upload_failed() {
         let error = UploadError::UploadFailed("HTTP 500: Internal Server Error".to_string());
-        
+
         assert!(error.to_string().contains("Upload failed"));
         assert!(error.to_string().contains("HTTP 500"));
     }
@@ -172,7 +190,7 @@ mod tests {
     #[test]
     fn test_upload_error_invalid_response() {
         let error = UploadError::InvalidResponse("Empty response".to_string());
-        
+
         assert!(error.to_string().contains("Invalid response"));
         assert!(error.to_string().contains("Empty response"));
     }
@@ -181,7 +199,7 @@ mod tests {
     fn test_filename_default() {
         let filename: Option<String> = None;
         let result = filename.clone().unwrap_or_else(|| "file".to_string());
-        
+
         assert_eq!(result, "file");
     }
 
@@ -189,7 +207,7 @@ mod tests {
     fn test_filename_with_custom_name() {
         let filename = Some("myfile.txt".to_string());
         let result = filename.clone().unwrap_or_else(|| "file".to_string());
-        
+
         assert_eq!(result, "myfile.txt");
     }
 
@@ -197,7 +215,7 @@ mod tests {
     fn test_url_trimming() {
         let url = "  https://x0.at/test.txt  \n";
         let trimmed = url.trim().to_string();
-        
+
         assert_eq!(trimmed, "https://x0.at/test.txt");
     }
 
@@ -211,7 +229,7 @@ mod tests {
     fn test_user_agent_format() {
         let version = env!("CARGO_PKG_VERSION");
         let user_agent = format!("pst/{}", version);
-        
+
         assert!(user_agent.starts_with("pst/"));
         assert!(user_agent.contains(version));
     }
@@ -220,7 +238,7 @@ mod tests {
     fn test_timeout_duration() {
         let timeout_seconds = 30u64;
         let duration = std::time::Duration::from_secs(timeout_seconds);
-        
+
         assert_eq!(duration.as_secs(), 30);
         assert_eq!(duration.as_millis(), 30000);
     }
@@ -229,7 +247,7 @@ mod tests {
     fn test_content_size_calculation() {
         let content = b"Hello, World!";
         let content_size = content.len() as u64;
-        
+
         assert_eq!(content_size, 13);
     }
 
@@ -238,7 +256,7 @@ mod tests {
         let max_size = 512 * 1024 * 1024;
         let large_content = vec![0u8; 1024 * 1024 * 513]; // 513 MiB
         let content_size = large_content.len() as u64;
-        
+
         assert!(content_size > max_size);
         assert_eq!(content_size, 513 * 1024 * 1024);
     }
@@ -248,7 +266,7 @@ mod tests {
         let max_size = 512 * 1024 * 1024;
         let small_content = b"small";
         let content_size = small_content.len() as u64;
-        
+
         assert!(content_size <= max_size);
         assert_eq!(content_size, 5);
     }
@@ -277,7 +295,7 @@ mod tests {
             None,
             false,
         );
-        
+
         assert_eq!(request.file_size(), 12);
     }
 }
@@ -338,10 +356,7 @@ impl UploadService for X0AtProvider {
             "file".to_string()
         };
 
-        let filename = request
-            .filename
-            .clone()
-            .unwrap_or_else(|| default_filename);
+        let filename = request.filename.clone().unwrap_or(default_filename);
 
         let mime_type = request
             .filename

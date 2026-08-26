@@ -55,10 +55,7 @@ impl UploadService for ZeroX0STProvider {
             "file".to_string()
         };
 
-        let filename = request
-            .filename
-            .clone()
-            .unwrap_or_else(|| default_filename);
+        let filename = request.filename.clone().unwrap_or(default_filename);
 
         let mime_type = request
             .filename

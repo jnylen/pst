@@ -4,9 +4,8 @@ use async_trait::async_trait;
 use aws_config::meta::region::RegionProviderChain;
 use aws_credential_types::Credentials;
 use aws_sdk_s3::primitives::ByteStream;
-use aws_sdk_s3::Client;
 use aws_sdk_s3::types::{CompletedMultipartUpload, CompletedPart};
-use mime_guess;
+use aws_sdk_s3::Client;
 use rand::Rng;
 
 pub struct S3Provider {
@@ -23,6 +22,7 @@ pub struct S3Provider {
 }
 
 impl S3Provider {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         bucket: String,
         region: String,
@@ -50,8 +50,9 @@ impl S3Provider {
     }
 
     async fn create_client(&self) -> Result<Client, UploadError> {
-        let region_provider = RegionProviderChain::first_try(aws_sdk_s3::config::Region::new(self.region.clone()));
-        
+        let region_provider =
+            RegionProviderChain::first_try(aws_sdk_s3::config::Region::new(self.region.clone()));
+
         let credentials = Credentials::new(
             &self.access_key_id,
             &self.secret_access_key,
@@ -141,7 +142,7 @@ impl S3Provider {
         progress: Option<&ProgressTracker>,
     ) -> Result<(), UploadError> {
         let byte_stream = ByteStream::from(content.to_vec());
-        
+
         client
             .put_object()
             .bucket(&self.bucket)
@@ -180,14 +181,17 @@ impl S3Provider {
             .acl(aws_sdk_s3::types::ObjectCannedAcl::PublicRead)
             .send()
             .await
-            .map_err(|e| UploadError::UploadFailed(format!("Failed to create multipart upload: {}", e)))?;
+            .map_err(|e| {
+                UploadError::UploadFailed(format!("Failed to create multipart upload: {}", e))
+            })?;
 
-        let upload_id = create_response.upload_id
+        let upload_id = create_response
+            .upload_id
             .ok_or_else(|| UploadError::UploadFailed("No upload ID returned".to_string()))?;
 
         // Upload parts
         let mut completed_parts = Vec::new();
-        let part_count = (total_size + chunk_size - 1) / chunk_size;
+        let part_count = total_size.div_ceil(chunk_size);
 
         for part_number in 1..=part_count {
             let start = (part_number - 1) * chunk_size;
@@ -195,7 +199,7 @@ impl S3Provider {
             let part_data = &content[start..end];
 
             let byte_stream = ByteStream::from(part_data.to_vec());
-            
+
             let upload_part_response = client
                 .upload_part()
                 .bucket(&self.bucket)
@@ -208,13 +212,17 @@ impl S3Provider {
                 .map_err(|e| {
                     // Try to abort multipart upload on failure
                     let _ = tokio::runtime::Handle::current().block_on(
-                        client.abort_multipart_upload()
+                        client
+                            .abort_multipart_upload()
                             .bucket(&self.bucket)
                             .key(key)
                             .upload_id(&upload_id)
-                            .send()
+                            .send(),
                     );
-                    UploadError::UploadFailed(format!("Failed to upload part {}: {}", part_number, e))
+                    UploadError::UploadFailed(format!(
+                        "Failed to upload part {}: {}",
+                        part_number, e
+                    ))
                 })?;
 
             completed_parts.push(
@@ -242,7 +250,9 @@ impl S3Provider {
             .multipart_upload(completed_multipart)
             .send()
             .await
-            .map_err(|e| UploadError::UploadFailed(format!("Failed to complete multipart upload: {}", e)))?;
+            .map_err(|e| {
+                UploadError::UploadFailed(format!("Failed to complete multipart upload: {}", e))
+            })?;
 
         Ok(())
     }
@@ -299,11 +309,13 @@ impl UploadService for S3Provider {
 
         // Determine if we need multipart upload
         let multipart_threshold = self.multipart_threshold_mb * 1024 * 1024;
-        
+
         if content_size > multipart_threshold {
-            self.upload_multipart(&client, &key, &request.content, &content_type, progress).await?;
+            self.upload_multipart(&client, &key, &request.content, &content_type, progress)
+                .await?;
         } else {
-            self.upload_single(&client, &key, &request.content, &content_type, progress).await?;
+            self.upload_single(&client, &key, &request.content, &content_type, progress)
+                .await?;
         }
 
         let final_url = format!("{}/{}", self.public_url.trim_end_matches('/'), key);
@@ -319,14 +331,13 @@ impl UploadService for S3Provider {
         match self.create_client().await {
             Ok(client) => {
                 // Try to list objects (with max 1) to test connection
-                match client.list_objects_v2()
+                client
+                    .list_objects_v2()
                     .bucket(&self.bucket)
                     .max_keys(1)
                     .send()
-                    .await {
-                    Ok(_) => true,
-                    Err(_) => false,
-                }
+                    .await
+                    .is_ok()
             }
             Err(_) => false,
         }
@@ -407,7 +418,13 @@ mod tests {
             30,
         );
 
-        let request = UploadRequest::new(b"test content".to_vec(), None, UploadType::Paste, None, false);
+        let request = UploadRequest::new(
+            b"test content".to_vec(),
+            None,
+            UploadType::Paste,
+            None,
+            false,
+        );
 
         let filename = provider.get_filename(&request);
         assert!(filename.ends_with(".txt"));
@@ -429,7 +446,13 @@ mod tests {
             30,
         );
 
-        let request = UploadRequest::new(b"html content".to_vec(), None, UploadType::Paste, None, true);
+        let request = UploadRequest::new(
+            b"html content".to_vec(),
+            None,
+            UploadType::Paste,
+            None,
+            true,
+        );
 
         let filename = provider.get_filename(&request);
         assert!(filename.ends_with(".html"));
@@ -451,7 +474,13 @@ mod tests {
             30,
         );
 
-        let request = UploadRequest::new(b"test content".to_vec(), None, UploadType::File, None, false);
+        let request = UploadRequest::new(
+            b"test content".to_vec(),
+            None,
+            UploadType::File,
+            None,
+            false,
+        );
 
         let filename = provider.get_filename(&request);
         assert!(filename.ends_with(".bin"));

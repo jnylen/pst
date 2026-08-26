@@ -274,7 +274,13 @@ mod tests {
             30,
         );
 
-        let request = UploadRequest::new(b"test content".to_vec(), None, UploadType::Paste, None, false);
+        let request = UploadRequest::new(
+            b"test content".to_vec(),
+            None,
+            UploadType::Paste,
+            None,
+            false,
+        );
 
         let filename = provider.get_filename(&request);
         assert!(filename.ends_with(".txt"));
@@ -292,7 +298,13 @@ mod tests {
             30,
         );
 
-        let request = UploadRequest::new(b"html content".to_vec(), None, UploadType::Paste, None, true);
+        let request = UploadRequest::new(
+            b"html content".to_vec(),
+            None,
+            UploadType::Paste,
+            None,
+            true,
+        );
 
         let filename = provider.get_filename(&request);
         assert!(filename.ends_with(".html"));
@@ -310,7 +322,13 @@ mod tests {
             30,
         );
 
-        let request = UploadRequest::new(b"test content".to_vec(), None, UploadType::File, None, false);
+        let request = UploadRequest::new(
+            b"test content".to_vec(),
+            None,
+            UploadType::File,
+            None,
+            false,
+        );
 
         let filename = provider.get_filename(&request);
         assert!(filename.ends_with(".bin"));

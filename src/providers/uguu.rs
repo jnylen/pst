@@ -73,10 +73,7 @@ impl UploadService for UguuProvider {
             "file".to_string()
         };
 
-        let filename = request
-            .filename
-            .clone()
-            .unwrap_or_else(|| default_filename);
+        let filename = request.filename.clone().unwrap_or(default_filename);
 
         // Determine mime type from filename extension
         let mime_type = request
