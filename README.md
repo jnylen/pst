@@ -37,6 +37,10 @@ cargo build --release
 cp target/release/pst /usr/local/bin/
 ```
 
+On Wayland, `pst` uses native Wayland clipboard support for reads and uses
+`wl-copy` when available so copied URLs remain available after `pst` exits.
+Arch Linux and Omarchy users can install it with `sudo pacman -S wl-clipboard`.
+
 ## First Run
 
 On first run, a default configuration file is created automatically at:

@@ -13,13 +13,6 @@ mod orchestrator;
 mod providers;
 mod redirect_generator;
 
-fn copy_to_clipboard(text: &str) -> Result<(), Box<dyn std::error::Error>> {
-    use arboard::Clipboard;
-    let mut clipboard = Clipboard::new()?;
-    clipboard.set_text(text)?;
-    Ok(())
-}
-
 #[derive(Parser, Debug)]
 #[clap(name = env!("CARGO_PKG_NAME"))]
 #[clap(author = env!("CARGO_PKG_AUTHORS"))]
@@ -400,7 +393,7 @@ async fn main() -> Result<()> {
                 // Copy to clipboard if enabled
                 let should_copy = args.copy_to_clipboard || config.general.copy_to_clipboard;
                 if should_copy {
-                    if let Err(e) = copy_to_clipboard(&url) {
+                    if let Err(e) = clipboard::copy_text(&url) {
                         eprintln!("Warning: Failed to copy to clipboard: {}", e);
                     } else {
                         eprintln!("URL copied to clipboard");

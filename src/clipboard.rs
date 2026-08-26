@@ -4,6 +4,13 @@ use image::ImageBuffer;
 use rand::Rng;
 use std::path::PathBuf;
 
+#[cfg(target_os = "linux")]
+use std::io::Write;
+#[cfg(target_os = "linux")]
+use std::process::{Command, Stdio};
+#[cfg(target_os = "linux")]
+use std::time::{Duration, Instant};
+
 #[derive(Debug)]
 pub enum ClipboardContent {
     Text(String),
@@ -125,6 +132,74 @@ impl ClipboardContent {
 
         Ok(ClipboardContent::Empty)
     }
+}
+
+/// Copy text to the desktop clipboard.
+///
+/// On Wayland, clipboard contents are owned and served by the process that
+/// copied them. Since `pst` exits immediately after an upload, use `wl-copy`
+/// when available: it forks a background process that keeps serving the data.
+/// `arboard` remains the portable fallback for other platforms and for Linux
+/// systems without `wl-copy`.
+pub fn copy_text(text: &str) -> Result<()> {
+    #[cfg(target_os = "linux")]
+    if std::env::var_os("WAYLAND_DISPLAY").is_some() {
+        match copy_text_with_wl_copy(text) {
+            Ok(()) => return Ok(()),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+            Err(error) => return Err(error).context("Failed to copy text with wl-copy"),
+        }
+    }
+
+    let mut clipboard = Clipboard::new().context("Failed to access clipboard")?;
+
+    #[cfg(target_os = "linux")]
+    {
+        use arboard::SetExtLinux;
+
+        // Give a clipboard manager a chance to retain the selection before
+        // this short-lived process exits.
+        clipboard
+            .set()
+            .wait_until(Instant::now() + Duration::from_secs(1))
+            .text(text.to_owned())
+            .context("Failed to copy text")?;
+    }
+
+    #[cfg(not(target_os = "linux"))]
+    clipboard.set_text(text).context("Failed to copy text")?;
+
+    Ok(())
+}
+
+#[cfg(target_os = "linux")]
+fn copy_text_with_wl_copy(text: &str) -> std::io::Result<()> {
+    let mut child = Command::new("wl-copy")
+        .arg("--type")
+        .arg("text/plain;charset=utf-8")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::null())
+        // `wl-copy` forks a background process that owns the Wayland
+        // selection. Do not pipe stderr: the background process inherits the
+        // descriptor and would keep `wait_with_output` blocked until the
+        // clipboard is replaced.
+        .stderr(Stdio::inherit())
+        .spawn()?;
+
+    child
+        .stdin
+        .take()
+        .expect("wl-copy stdin was configured")
+        .write_all(text.as_bytes())?;
+
+    let status = child.wait()?;
+    if status.success() {
+        return Ok(());
+    }
+
+    Err(std::io::Error::other(format!(
+        "wl-copy exited with {status}"
+    )))
 }
 
 fn detect_image_format(data: &[u8]) -> ImageFormat {
